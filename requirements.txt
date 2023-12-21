@@ -1,0 +1,5 @@
+braintree
+pandas
+snowflake-connector-python
+flask
+python-dotenv
