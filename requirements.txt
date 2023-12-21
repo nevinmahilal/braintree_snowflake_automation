@@ -1,6 +1,6 @@
 braintree
 pandas
-snowflake-connector-python
+snowflake-connector-python[pandas]
 flask
 python-dotenv
 gunicorn
