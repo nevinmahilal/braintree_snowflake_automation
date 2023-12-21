@@ -84,7 +84,7 @@ def home():
 def refresh_braintree_data():
     gateway = braintree.BraintreeGateway(
         braintree.Configuration(
-            environment=os.environ.get("BRAINTREE_ENV"),
+            environment=braintree.Environment.Production,
             merchant_id=os.environ.get("BRAINTREE_MERCHANT_ID"),
             public_key=os.environ.get("BRAINTREE_PUBLIC_KEY"),
             private_key=os.environ.get("BRAINTREE_PRIVATE_KEY") 
