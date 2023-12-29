@@ -28,8 +28,16 @@ def table_to_dataframe(conn, table):
     cur.close()
     return df
 
-def incremental_refresh(conn, table_name, schema, database, new_df):
-    df_table = table_to_dataframe(conn, f'{database}.{schema}.{table_name}')
+def records_from_last_week(conn, lastweek_start):
+  cur = conn.cursor()
+  cur.execute(f"SELECT * FROM raw.braintree_data.transactions WHERE created_at > '{lastweek_start}'")
+  df = cur.fetch_pandas_all()
+  cur.close()
+  return df
+
+def incremental_refresh(conn, table_name, schema, database, new_df, timestamp):
+    # df_table = table_to_dataframe(conn, f'{database}.{schema}.{table_name}')
+    df_table = records_from_last_week(conn, timestamp)
     df_updated_table = pd.concat([df_table, new_df], ignore_index=True)
     df_updated_table = df_updated_table.drop_duplicates(subset='ID', keep=False)
     print(f'{len(df_updated_table)} new records added')
@@ -76,6 +84,14 @@ def json_serial(obj):
         # return localize_naive(obj.isoformat())
     raise TypeError ("Type not serializable")
 
+def get_last_record_timestamp(conn):
+  cur = conn.cursor()
+  cur.execute(f'SELECT max(created_at) from raw.braintree_data.transactions;')
+  result = cur.fetchone()
+  # Extract the timestamp (first field in the result)
+  last_record_timestamp = result[0]
+  return last_record_timestamp
+    
 @app.get("/")
 def home():
     return "server running"
@@ -123,6 +139,11 @@ def refresh_braintree_data():
         "UPDATED_AT": [],
     }
 
+    last_record_timestamp = get_last_record_timestamp(conn)
+    # Calculate a week ago date at 00:00 hours
+    lastweek_start = (last_record_timestamp - timedelta(days=7)).replace(hour=0, minute=0, second=0, microsecond=0)
+    last_record_str = last_record_timestamp.replace(hour=0, minute=0, second=0, microsecond=0).strftime("%m/%d/%Y %H:%M")
+    
     # Get the current date and time
     now = datetime.now()
 
@@ -154,6 +175,6 @@ def refresh_braintree_data():
 
     df = df.drop_duplicates(subset='ID', keep="last")
 
-    incremental_refresh(conn, 'TRANSACTIONS', 'BRAINTREE_DATA', 'RAW', df)
+    incremental_refresh(conn, 'TRANSACTIONS', 'BRAINTREE_DATA', 'RAW', df, last_record_timestamp)
 
     return "run completed"
