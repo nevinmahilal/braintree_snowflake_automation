@@ -157,7 +157,7 @@ def refresh_braintree_data():
     yesterday_start_str = yesterday_start.strftime("%m/%d/%Y %H:%M")
     tomorrow_end_str = tomorrow_end.strftime("%m/%d/%Y %H:%M")
 
-    search_results = gateway.transaction.search(braintree.TransactionSearch.created_at.between(yesterday_start_str, tomorrow_end_str))
+    search_results = gateway.transaction.search(braintree.TransactionSearch.created_at.between(last_record_str, tomorrow_end_str))
     data = update_transaction_table(search_results, data)
 
     df = pd.DataFrame(data)
