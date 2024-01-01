@@ -94,7 +94,7 @@ def get_last_record_timestamp(conn):
     
 @app.get("/")
 def home():
-    return "server running"
+    return "server is running"
 
 @app.route("/refresh", methods=["GET"])
 def refresh_braintree_data():
